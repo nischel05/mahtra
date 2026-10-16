@@ -17,6 +17,7 @@
     --sandstone: #B9835C;
     --olive: #786547;
     --tomb: #241913;
+    --plaster: #B1A49B;   /* brand-line ground, from the client's posts */
     --hairline: rgba(36, 25, 19, 0.12);
 
     --serif: "Cormorant Garamond", "EB Garamond", Georgia, "Times New Roman", serif;
@@ -362,10 +363,18 @@
   /* ---------------------------------------------------------------
      3. Brand line
      --------------------------------------------------------------- */
+  /* Cracked plaster, matched to the client's "Coming Soon" post
+     (mean #B1A49B). Text stays tomb: the post's cream lettering would sit
+     near 2:1 on this ground, tomb holds 7:1. */
   .brand-line {
-    background: var(--papyrus);
+    background: var(--plaster) url("images/brand-plaster.jpg") center / cover no-repeat;
     padding: clamp(72px, 10vw, 136px) 0;
   }
+  /* Olive would fall to about 2:1 on plaster, so links here keep their
+     colour on hover and only thicken. */
+  .brand-line .text-link:hover,
+  .brand-line .text-link:focus-visible { color: var(--tomb); }
+  .brand-line .text-link:focus-visible { outline-color: var(--tomb); }
   .brand-line__text {
     max-width: 30ch;
     margin: 0 auto;
