@@ -1,0 +1,28 @@
+# Everything here is kept locally but is not needed for the public site to run.
+# The page needs only index.html, the web-sized files at the top of images/,
+# and videos/mahtra-draft1.mp4.
+
+# Full shoot library: 1,539 frames, 1.3GB, over the GitHub Pages 1GB limit.
+# Web-sized crops of the frames in use are at the top of images/ (see assets.md).
+/extra-images/
+/images/extra-images/
+
+# Source and held-back frames the page does not reference
+/images/_alternates/
+/images/logo/
+
+# Duplicate of images/video-poster.jpg, which is the copy the page uses
+/videos/video-poster.jpg
+
+# Working notes (build brief and asset inventory). Not used by the site, and
+# GitHub Pages would publish them as pages of the public site.
+/CLAUDE.md
+/assets.md
+
+# Sand-engine reference material: never ships
+/reference/
+
+# OS clutter
+Thumbs.db
+desktop.ini
+.DS_Store

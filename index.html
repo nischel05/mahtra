@@ -1,0 +1,2290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MahtRa — Resort wear</title>
+<!-- INVENTED: meta description is placeholder copy -->
+<meta name="description" content="MahtRa makes resort wear in linen and silk, cut for long heat and old stone.">
+<link rel="icon" type="image/png" href="images/logo-mahtra-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap">
+<style>
+  :root {
+    --limestone: #F4EEE4;
+    --papyrus: #E3D6C3;
+    --sandstone: #B9835C;
+    --olive: #786547;
+    --tomb: #241913;
+    --hairline: rgba(36, 25, 19, 0.12);
+
+    --serif: "Cormorant Garamond", "EB Garamond", Georgia, "Times New Roman", serif;
+    --sans: Jost, "Century Gothic", "Futura", "Helvetica Neue", Arial, sans-serif;
+    --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+    --gutter: 24px;
+    --container: 1240px;
+
+    /* Width of the buried set. The canvas reads the set's box from the DOM,
+       so this one value sizes the television, its screen and the wordmark. */
+    --tv-w: min(92vw, 60vh);
+  }
+  @supports (height: 100svh) {
+    :root { --tv-w: min(92vw, 60svh); }
+  }
+  /* Above the breakpoint the set is sized from the viewport height to match
+     the client's reference: about 88% of the hero's height, screen about
+     70%. 110svh of width is 88svh of height at the set's 5:4. */
+  @media (min-width: 860px) {
+    :root { --tv-w: min(72vw, 110vh); }
+    @supports (height: 100svh) {
+      :root { --tv-w: min(72vw, 110svh); }
+    }
+  }
+  @media (min-width: 1241px) {
+    :root { --gutter: 32px; }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    background: var(--limestone);
+    color: var(--tomb);
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    position: relative;
+    background: var(--limestone);
+    color: var(--tomb);
+    font-family: var(--sans);
+    font-weight: 300;
+    font-size: 15px;
+    line-height: 1.75;
+  }
+  h1, h2, h3 { text-wrap: balance; }
+
+  :focus-visible {
+    outline: 2px solid var(--olive);
+    outline-offset: 3px;
+  }
+
+  /* ---------------------------------------------------------------
+     1. Hero
+     --------------------------------------------------------------- */
+
+  /* An unclipped, unstuck stand-in for the hero's box. The canvas loop
+     watches this instead of the hero itself: a sticky element stays
+     "in view" while the page scrolls over it, so it cannot report how
+     much of the hero is still visible. */
+  .hero-sentinel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 100vh;
+    height: 100svh;
+    pointer-events: none;
+  }
+
+  .hero {
+    position: sticky;
+    top: 0;
+    z-index: 0;
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
+    background: #9a7552;
+  }
+
+  .hero canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .sand-ground { z-index: 2; }
+  .sand-loose {
+    z-index: 3;
+    touch-action: pan-y;
+  }
+
+  .set-box {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--tv-w);
+    aspect-ratio: 5 / 4;
+    transform: translate(-50%, -50%);
+    /* The screen's box inside the set: a thin bezel, a touch deeper at
+       the foot. drawSet() reads the .screen box, so the drawn glass and
+       the film always line up. */
+    --scr-l: 4.5%;
+    --scr-t: 5.5%;
+    --scr-w: 91%;
+    --scr-h: 87%;
+  }
+  .set { z-index: 1; }
+
+  .screen {
+    position: absolute;
+    left: var(--scr-l);
+    top: var(--scr-t);
+    width: var(--scr-w);
+    height: var(--scr-h);
+    overflow: hidden;
+    background: #0e0a08;
+    display: grid;
+    place-items: center;
+  }
+  .film {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* Tint between the film and the wordmark. The film runs from pale
+     limestone relief to night frames; this keeps limestone type above
+     3:1 against its palest frames. */
+  .screen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: rgba(20, 14, 10, 0.45);
+  }
+
+  .wordmark {
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    width: calc(var(--tv-w) * 0.21);
+    color: var(--limestone);
+  }
+
+  /* The supplied logo, recoloured through a mask so one file serves every
+     ground: limestone on the film and the footer, tomb in the bar. */
+  .logo {
+    display: block;
+    background-color: currentColor;
+    -webkit-mask: var(--logo-src) center / contain no-repeat;
+    mask: var(--logo-src) center / contain no-repeat;
+  }
+  .logo--full { --logo-src: url("images/logo-mahtra.png"); aspect-ratio: 258 / 309; }
+  .logo--mark { --logo-src: url("images/logo-mahtra-mark.png"); aspect-ratio: 1; }
+  .logo--word { --logo-src: url("images/logo-mahtra-word.png"); aspect-ratio: 258 / 74; }
+
+  /* No-JS: a labelled placeholder stands where the canvas would be. */
+  .hero-still {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: var(--sandstone);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 24px;
+  }
+  .hero.is-live .hero-still { display: none; }
+
+  /* Labels for hero assets that do not exist yet. Shown only when the
+     file fails to load, so a missing asset is visible rather than silent. */
+  .hero-notes {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+  }
+  .ph-tag {
+    position: absolute;
+    display: inline-block;
+    padding: 5px 8px;
+    background: rgba(36, 25, 19, 0.78);
+    color: var(--limestone);
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .ph-tag[hidden] { display: none; }
+  .hero-still .ph-tag { position: static; }
+  .ph-tag--tv { left: 0; bottom: 100%; margin-bottom: 8px; }
+  .ph-tag--shell-01 { right: 3%; top: 74%; }
+  .ph-tag--shell-02 { right: 3%; top: 86%; }
+  .ph-tag--shell-03 { left: 3%; top: 82%; }
+
+  /* ---------------------------------------------------------------
+     2. Header
+     Over the hero: three glyphs in the corners, no bar. Once the hero
+     has scrolled away it becomes a limestone bar with the full nav.
+     --------------------------------------------------------------- */
+  .site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    height: 64px;
+    pointer-events: none;   /* the sand stays touchable between the glyphs */
+  }
+  .site-header__row {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--gutter);
+  }
+  .site-header a { pointer-events: auto; }
+
+  .nav-link {
+    display: inline-block;
+    padding: 12px 0;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: inherit;
+    text-decoration: none;
+  }
+  .nav-link:hover,
+  .nav-link:focus-visible {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
+  }
+
+  .site-nav {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    color: inherit;
+    text-decoration: none;
+  }
+  .brand__mark { width: 36px; }
+  .brand__word { width: 76px; }
+
+  /* Over the hero, each glyph takes the ink that reads on the sand
+     beneath it; the script measures that from the light field. */
+  .glyph { color: var(--glyph-ink, var(--tomb)); }
+
+  /* Glyph state */
+  .site-header:not(.is-bar) .nav-extra,
+  .site-header:not(.is-bar) .brand__word { display: none; }
+
+  /* Bar state */
+  .site-header.is-bar {
+    background: var(--limestone);
+    color: var(--tomb);
+    pointer-events: auto;
+  }
+  .site-header.is-bar .site-header__row {
+    max-width: calc(var(--container) + 2 * var(--gutter));
+    margin: 0 auto;
+  }
+  .site-header.is-bar .glyph { color: var(--tomb); }
+  .site-header.is-bar .brand__mark { width: 30px; }
+
+  .glyph--collection {
+    position: absolute;
+    right: var(--gutter);
+    bottom: var(--gutter);
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .glyph--collection svg { display: block; }
+
+  @media (max-width: 559px) {
+    .site-nav { gap: 16px; }
+    /* Not enough room beside three nav links: the mark alone. */
+    .site-header.is-bar .brand__word { display: none; }
+  }
+
+  /* ---------------------------------------------------------------
+     Page body: everything from section 3 scrolls over the hero
+     --------------------------------------------------------------- */
+  main {
+    position: relative;
+    z-index: 1;
+    background: var(--limestone);
+  }
+  .container {
+    max-width: calc(var(--container) + 2 * var(--gutter));
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* 3. Section reveal. Visible by default; the script adds .will-reveal
+     only when it can also take it away again. */
+  .will-reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 620ms var(--ease), transform 620ms var(--ease);
+  }
+  .will-reveal.is-revealed {
+    opacity: 1;
+    transform: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .will-reveal {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+  }
+
+  /* ---------------------------------------------------------------
+     3. Brand line
+     --------------------------------------------------------------- */
+  .brand-line {
+    background: var(--papyrus);
+    padding: clamp(72px, 10vw, 136px) 0;
+  }
+  .brand-line__text {
+    max-width: 30ch;
+    margin: 0 auto;
+    font-family: var(--serif);
+    font-size: clamp(26px, 3.4vw, 42px);
+    font-weight: 300;
+    line-height: 1.15;
+    text-align: center;
+    text-wrap: balance;
+    color: var(--tomb);
+  }
+
+  /* Anchor jumps land below the sticky bar. */
+  main section[id] { scroll-margin-top: 64px; }
+
+  /* Section heading: uppercase Cormorant with one word dropped into
+     italic. Used on every section heading and nowhere else.
+     500 is the specified weight; it is not among the loaded weights, so
+     browsers render the nearest one, 400. */
+  .section-title {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: clamp(20px, 2.4vw, 28px);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .section-title em {
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .eyebrow {
+    margin: 0;
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--hairline);
+    margin-bottom: clamp(32px, 4vw, 48px);
+  }
+
+  /* ---------------------------------------------------------------
+     4. The Collection
+     --------------------------------------------------------------- */
+  .collection {
+    padding: clamp(72px, 9vw, 120px) 0;
+  }
+
+  .product-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--gutter);
+    row-gap: 48px;
+  }
+  @media (min-width: 860px) {
+    .product-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      row-gap: 64px;
+    }
+  }
+  @media (max-width: 559px) {
+    .product-grid { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  .product__media {
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .product__media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .product__name {
+    margin: 0 0 4px;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .product__name span { padding-bottom: 3px; }
+  .product__meta {
+    margin: 0 0 14px;
+    font-size: 11px;
+    font-weight: 300;
+    line-height: 1.4;
+    letter-spacing: 0.08em;
+  }
+
+  .product__enquire {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--tomb);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
+    transition: color 180ms ease, text-decoration-color 180ms ease;
+  }
+  .product__enquire:hover,
+  .product__enquire:focus-visible {
+    color: var(--olive);
+    text-decoration-thickness: 2px;
+  }
+
+  /* 4. Product hover: pointer devices only, never a tap state. */
+  @media (hover: hover) and (pointer: fine) {
+    .product__media img {
+      transition: transform 900ms var(--ease);
+    }
+    .product:hover .product__media img,
+    .product:focus-within .product__media img {
+      transform: scale(1.03);
+    }
+    .product__name span {
+      background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+      transition: background-size 320ms var(--ease);
+    }
+    .product:hover .product__name span,
+    .product:focus-within .product__name span {
+      background-size: 100% 1px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .product__media img { transition: none; }
+    .product:hover .product__media img,
+    .product:focus-within .product__media img { transform: none; }
+    .product__name span { transition: none; }
+  }
+
+  /* ---------------------------------------------------------------
+     5. Editorial
+     Full bleed, zero gutters, zero gaps.
+     --------------------------------------------------------------- */
+  .editorial-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (min-width: 860px) {
+    .editorial-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  .editorial__cell {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+  }
+  .editorial__cell img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* The colonnade frame is pale sky above and pale ground below, so the
+     overlay sits on a tomb gradient rising from the lower edge. It keeps
+     the link above 4.5:1 and the title above 3:1. */
+  .editorial__cell--feature::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top,
+      rgba(36, 25, 19, 0.66) 0%,
+      rgba(36, 25, 19, 0.40) 32%,
+      rgba(36, 25, 19, 0) 58%);
+  }
+  .editorial__overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    padding: clamp(24px, 4vw, 56px);
+    color: var(--limestone);
+  }
+  .editorial__title {
+    margin: 0 0 18px;
+    font-family: var(--serif);
+    font-size: clamp(26px, 3.4vw, 42px);
+    font-weight: 300;
+    line-height: 1.15;
+  }
+  .editorial__link {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--limestone);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
+    transition: color 180ms ease, text-decoration-color 180ms ease;
+  }
+  /* On photography the olive hover and focus colours would vanish, so
+     the link keeps its colour, thickens, and takes a limestone ring. */
+  .editorial__link:hover,
+  .editorial__link:focus-visible {
+    text-decoration-thickness: 2px;
+  }
+  .editorial__link:focus-visible {
+    outline-color: var(--limestone);
+  }
+
+  /* 6. Banner — cut. Its frame (images/banner-temple-wide.jpg) has not
+     been shot, and the editorial grid already does its job. */
+
+  /* ---------------------------------------------------------------
+     7. Enquire
+     --------------------------------------------------------------- */
+  .enquire {
+    background: var(--papyrus);
+    padding: clamp(72px, 9vw, 120px) 0;
+  }
+  .enquire__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+  }
+  @media (min-width: 860px) {
+    .enquire__body {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: var(--gutter);
+    }
+  }
+  .enquire__intro {
+    max-width: 62ch;
+    margin: 0;
+  }
+
+  .enquiry-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px var(--gutter);
+  }
+  @media (min-width: 560px) {
+    .enquiry-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .field--wide { grid-column: 1 / -1; }
+  }
+  .field label {
+    display: block;
+    margin-bottom: 8px;
+  }
+  .field__note {
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    text-transform: none;
+  }
+
+  /* Accessibility exception to "nothing else gets a border": the limestone
+     fill alone sits at about 1.2:1 on papyrus, below the 3:1 a field's
+     edge needs, so each field takes a 1px tomb underline. Agreed with the
+     client. */
+  .field input,
+  .field select,
+  .field textarea {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 14px 16px;
+    border: 0;
+    border-bottom: 1px solid var(--tomb);
+    border-radius: 0;
+    background: var(--limestone);
+    color: var(--tomb);
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 300;
+    line-height: 1.5;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .field textarea {
+    min-height: 156px;
+    resize: vertical;
+  }
+  .select-wrap {
+    position: relative;
+  }
+  .select-wrap select { padding-right: 44px; }
+  .select-wrap svg {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .form-foot {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 24px;
+  }
+
+  .button {
+    display: inline-block;
+    padding: 14px 28px;
+    border: 0;
+    border-radius: 0;
+    background: var(--olive);
+    color: var(--limestone);
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 180ms ease;
+  }
+  .button:hover,
+  .button:focus-visible { background: var(--tomb); }
+  .button--submit { border-radius: 999px; }
+
+  .form-status {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .form-status:empty { display: none; }
+  /* Shown while the form has no endpoint: visible rather than silent. */
+  .form-status.is-unwired {
+    padding: 5px 8px;
+    background: rgba(36, 25, 19, 0.78);
+    color: var(--limestone);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+
+  /* ---------------------------------------------------------------
+     8. Footer
+     Tomb ground. Sandstone is allowed as text here and only here.
+     --------------------------------------------------------------- */
+  .site-footer {
+    position: relative;
+    z-index: 1;
+    background: var(--tomb);
+    color: var(--limestone);
+    padding: clamp(64px, 8vw, 104px) 0 32px;
+  }
+  .footer__main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 56px;
+  }
+  @media (min-width: 860px) {
+    .footer__main {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: var(--gutter);
+    }
+  }
+
+  .footer__brand {
+    display: block;
+    width: 92px;
+    margin: 0 0 28px;
+    color: var(--limestone);
+  }
+
+  .footer__line {
+    max-width: 36ch;
+    margin: 0 0 24px;
+  }
+
+  .newsletter label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--sandstone);
+  }
+  .newsletter__row {
+    display: flex;
+    max-width: 440px;
+  }
+  /* Same underline exception as the enquiry fields. */
+  .newsletter input {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    padding: 14px 0;
+    border: 0;
+    border-bottom: 1px solid var(--limestone);
+    border-radius: 0;
+    background: transparent;
+    color: var(--limestone);
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 300;
+    line-height: 1.5;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .newsletter .button { flex: 0 0 auto; }
+  .newsletter .form-status { margin-top: 12px; }
+
+  .footer__cols {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--gutter);
+  }
+  .footer__heading {
+    margin: 0 0 16px;
+    color: var(--sandstone);
+  }
+  .footer__links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .footer__links li + li { margin-top: 4px; }
+  .footer-link {
+    display: inline-block;
+    padding: 6px 0;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--limestone);
+    text-decoration: none;
+  }
+  .footer-link:hover,
+  .footer-link:focus-visible {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
+  }
+
+  .footer__legal {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 24px;
+    margin-top: clamp(56px, 7vw, 96px);
+    font-size: 11px;
+    line-height: 1.4;
+    letter-spacing: 0.08em;
+    color: var(--sandstone);
+  }
+  .footer__legal p { margin: 0; }
+
+  /* ---------------------------------------------------------------
+     Piece detail panel
+     Opened from a product's name; the whole tile is its hit area. It
+     appears without a transition: CLAUDE.md allows four motion effects
+     and this is not one of them.
+     --------------------------------------------------------------- */
+  .product { position: relative; }
+  .product__open {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .product__open::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+  .product__enquire {
+    position: relative;
+    z-index: 1;
+  }
+
+  html.has-panel { overflow: hidden; }
+
+  .piece-panel {
+    position: fixed;
+    inset: 0 0 0 auto;
+    width: min(1180px, 100%);
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    margin: 0 0 0 auto;
+    padding: 0;
+    border: 0;
+    background: var(--limestone);
+    color: var(--tomb);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .piece-panel::backdrop { background: rgba(36, 25, 19, 0.55); }
+
+  .piece-panel__bar {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px var(--gutter);
+    background: var(--limestone);
+  }
+  .piece-panel__close {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+
+  .piece-panel__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+    padding: 0 var(--gutter) 56px;
+  }
+  @media (min-width: 860px) {
+    .piece-panel__body {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      align-items: start;
+    }
+    .piece-panel__info {
+      position: sticky;
+      top: 64px;
+    }
+  }
+
+  .piece-panel__gallery {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .piece-panel__gallery img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+  }
+
+  .piece-panel__title {
+    margin: 10px 0 6px;
+    font-family: var(--serif);
+    font-size: clamp(26px, 3.4vw, 42px);
+    font-weight: 300;
+    line-height: 1.15;
+  }
+  .piece-panel__desc {
+    max-width: 62ch;
+    margin: 20px 0 24px;
+  }
+  .piece-panel__details {
+    list-style: none;
+    margin: 0 0 28px;
+    padding: 0;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .piece-panel__details li + li { margin-top: 6px; }
+  .piece-panel__details .eyebrow {
+    display: inline-block;
+    min-width: 64px;
+  }
+
+  /* Sizes: the filter-style pill, the one place besides the submit
+     button with a radius. The choice rides along to the enquiry. */
+  .sizes {
+    margin: 0 0 28px;
+    padding: 0;
+    border: 0;
+  }
+  .sizes legend {
+    margin-bottom: 12px;
+    padding: 0;
+  }
+  .sizes__options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .sizes input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+  .sizes span {
+    display: inline-block;
+    min-width: 48px;
+    padding: 9px 16px;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0.14em;
+    text-align: center;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 180ms ease, color 180ms ease;
+  }
+  .sizes label:hover span { border-color: var(--tomb); }
+  .sizes input:checked + span {
+    background: var(--olive);
+    border-color: var(--olive);
+    color: var(--limestone);
+  }
+  .sizes input:focus-visible + span {
+    outline: 2px solid var(--olive);
+    outline-offset: 3px;
+  }
+</style>
+</head>
+<body>
+
+<div class="hero-sentinel" aria-hidden="true"></div>
+
+<header class="site-header">
+  <div class="site-header__row">
+    <a class="brand glyph" href="#top" aria-label="MahtRa, back to top">
+      <span class="logo logo--mark brand__mark" aria-hidden="true"></span>
+      <span class="logo logo--word brand__word" aria-hidden="true"></span>
+    </a>
+    <nav class="site-nav" aria-label="Main">
+      <a class="nav-link nav-extra" href="#collection">Collection</a>
+      <a class="nav-link nav-extra" href="#editorial">Editorial</a>
+      <a class="nav-link glyph" href="#enquire">Enquire</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" id="top" aria-labelledby="hero-title">
+  <div class="hero-still">
+    <span class="ph-tag">images/sand-hero-still.jpg</span>
+  </div>
+
+  <div class="set set-box">
+    <div class="screen">
+      <video class="film" muted loop playsinline preload="none"
+             poster="images/video-poster.jpg" width="960" height="408"
+             aria-hidden="true">
+        <source src="videos/mahtra-draft1.mp4" type="video/mp4">
+        <source src="videos/mahtra-draft1.webm" type="video/webm">
+      </video>
+      <h1 class="wordmark" id="hero-title">
+        <span class="logo logo--full" aria-hidden="true"></span>
+        <span class="visually-hidden">MahtRa</span>
+      </h1>
+    </div>
+  </div>
+
+  <canvas class="sand-ground" aria-hidden="true"></canvas>
+  <canvas class="sand-loose" aria-hidden="true"></canvas>
+
+  <!-- Third header glyph. It lives in the hero so the page covers it on
+       the way down; the bar's own Collection link takes over from it. -->
+  <a class="nav-link glyph glyph--collection" href="#collection">
+    Collection
+    <svg width="9" height="13" viewBox="0 0 9 13" aria-hidden="true" focusable="false">
+      <path d="M4.5 0.5v11.5M0.75 8.25l3.75 3.75 3.75-3.75" fill="none" stroke="currentColor" stroke-width="1"/>
+    </svg>
+  </a>
+
+  <div class="hero-notes" aria-hidden="true">
+    <div class="set-box">
+      <span class="ph-tag ph-tag--tv" data-asset="images/tv-topdown.png" hidden>images/tv-topdown.png — drawn stand-in</span>
+    </div>
+    <span class="ph-tag ph-tag--shell-01" data-asset="images/shell-01.png" hidden>images/shell-01.png</span>
+    <span class="ph-tag ph-tag--shell-02" data-asset="images/shell-02.png" hidden>images/shell-02.png</span>
+    <span class="ph-tag ph-tag--shell-03" data-asset="images/shell-03.png" hidden>images/shell-03.png</span>
+  </div>
+</section>
+
+<main>
+  <section class="brand-line" aria-labelledby="brand-line-title">
+    <!-- INVENTED: section label, read by screen readers only -->
+    <h2 class="visually-hidden" id="brand-line-title">About MahtRa</h2>
+    <div class="container" data-reveal>
+      <!-- INVENTED: brand line -->
+      <p class="brand-line__text">MahtRa makes resort wear in linen and silk, cut for long heat and old stone.</p>
+    </div>
+  </section>
+
+  <section class="collection" id="collection" aria-labelledby="collection-title">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <!-- INVENTED: collection heading -->
+        <h2 class="section-title" id="collection-title">Season <em>One</em></h2>
+        <p class="eyebrow">Eight pieces</p>
+      </div>
+
+      <!-- INVENTED: every product name and fabric note below. Each name
+           opens the piece's detail panel; Enquire goes straight to the form. -->
+      <ul class="product-grid" data-reveal>
+        <li class="product">
+          <div class="product__media">
+            <img src="images/piece-sage-skirt.jpg" width="900" height="1200" loading="lazy" decoding="async"
+                 alt="White bandeau crop and sage linen mini skirt, front on, against a white seamless">
+          </div>
+          <h3 class="product__name"><button class="product__open" type="button" data-open="sage-mini-skirt" aria-haspopup="dialog"><span>Sage Mini Skirt</span></button></h3>
+          <p class="product__meta">Handwoven linen</p>
+          <a class="product__enquire" href="#enquire" data-piece="sage-mini-skirt">Enquire<span class="visually-hidden"> about the Sage Mini Skirt</span></a>
+        </li>
+        <li class="product">
+          <div class="product__media">
+            <img src="images/piece-halter-set.jpg" width="900" height="1200" loading="lazy" decoding="async"
+                 alt="Blush keyhole halter crop with the sage mini skirt, hand on hip, against a white seamless">
+          </div>
+          <h3 class="product__name"><button class="product__open" type="button" data-open="blush-halter-set" aria-haspopup="dialog"><span>Blush Halter Set</span></button></h3>
+          <p class="product__meta">Washed linen</p>
+          <a class="product__enquire" href="#enquire" data-piece="blush-halter-set">Enquire<span class="visually-hidden"> about the Blush Halter Set</span></a>
+        </li>
+        <li class="product">
+          <div class="product__media">
+            <img src="images/piece-fern-coord.jpg" width="900" height="1200" loading="lazy" decoding="async"
+                 alt="Cream fern-embroidered camisole and flared trouser, front on, against a white seamless">
+          </div>
+          <h3 class="product__name"><button class="product__open" type="button" data-open="fern-co-ord" aria-haspopup="dialog"><span>Fern Co-ord</span></button></h3>
+          <p class="product__meta">Embroidered cotton</p>
+          <a class="product__enquire" href="#enquire" data-piece="fern-co-ord">Enquire<span class="visually-hidden"> about the Fern Co-ord</span></a>
+        </li>
+        <li class="product">
+          <div class="product__media">
+            <img src="images/piece-greige-drape.jpg" width="900" height="1200" loading="lazy" decoding="async"
+                 alt="Pearl triangle bralette with a knotted greige wrap skirt, against a white seamless">
+          </div>
+          <h3 class="product__name"><button class="product__open" type="button" data-open="greige-wrap-drape" aria-haspopup="dialog"><span>Greige Wrap Drape</span></button></h3>
+          <p class="product__meta">Washed silk</p>
+          <a class="product__enquire" href="#enquire" data-piece="greige-wrap-drape">Enquire<span class="visually-hidden"> about the Greige Wrap Drape</span></a>
+        </li>
+        <li class="product">
+          <div class="product__media">
+            <img src="images/piece-gold-leaf-gown.jpg" width="900" height="1200" loading="lazy" decoding="async"
+                 alt="Ivory slip dress embroidered with gold leaves, hands clasped, against a white seamless">
+          </div>
+          <h3 class="product__name"><button class="product__open" type="button" data-open="gold-leaf-gown" aria-haspopup="dialog"><span>Gold Leaf Gown</span></button></h3>
+          <p class="product__meta">Silk organza</p>
+          <a class="product__enquire" href="#enquire" data-piece="gold-leaf-gown">Enquire<span class="visually-hidden"> about the Gold Leaf Gown</span></a>
+        </li>
+        <li class="product">
+          <div class="product__media">
+            <img src="images/piece-lilac-tunic.jpg" width="900" height="1200" loading="lazy" decoding="async"
+                 alt="Lilac-grey tunic with bell sleeves and a sand-coloured hem band, front on, against a white seamless">
+          </div>
+          <h3 class="product__name"><button class="product__open" type="button" data-open="lilac-tunic" aria-haspopup="dialog"><span>Lilac Tunic</span></button></h3>
+          <p class="product__meta">Handwoven linen</p>
+          <a class="product__enquire" href="#enquire" data-piece="lilac-tunic">Enquire<span class="visually-hidden"> about the Lilac Tunic</span></a>
+        </li>
+        <li class="product">
+          <div class="product__media">
+            <img src="images/piece-stripe-halter-dress.jpg" width="900" height="1200" loading="lazy" decoding="async"
+                 alt="Clay and taupe striped halter mini dress with a ring at the neck, front on, against a white seamless">
+          </div>
+          <h3 class="product__name"><button class="product__open" type="button" data-open="stripe-halter-dress" aria-haspopup="dialog"><span>Stripe Halter Dress</span></button></h3>
+          <p class="product__meta">Woven cotton</p>
+          <a class="product__enquire" href="#enquire" data-piece="stripe-halter-dress">Enquire<span class="visually-hidden"> about the Stripe Halter Dress</span></a>
+        </li>
+        <li class="product">
+          <div class="product__media">
+            <img src="images/piece-one-shoulder-set.jpg" width="900" height="1200" loading="lazy" decoding="async"
+                 alt="Cream one-shoulder top layered over an asymmetric skirt, front on, against a white seamless">
+          </div>
+          <h3 class="product__name"><button class="product__open" type="button" data-open="one-shoulder-set" aria-haspopup="dialog"><span>One-Shoulder Set</span></button></h3>
+          <p class="product__meta">Raw linen</p>
+          <a class="product__enquire" href="#enquire" data-piece="one-shoulder-set">Enquire<span class="visually-hidden"> about the One-Shoulder Set</span></a>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="editorial" id="editorial" aria-labelledby="editorial-title">
+    <h2 class="visually-hidden" id="editorial-title">Editorial</h2>
+    <div class="editorial-grid" data-reveal>
+      <div class="editorial__cell editorial__cell--feature">
+        <img src="images/editorial-colonnade.jpg" width="800" height="1000" loading="lazy" decoding="async"
+             alt="White crop top and sage mini skirt, arms folded between two carved sandstone columns in hard midday sun">
+        <div class="editorial__overlay">
+          <!-- INVENTED: editorial overlay title and link text -->
+          <h3 class="editorial__title">The Valley Series</h3>
+          <!-- TODO: no destination exists yet for this link -->
+          <a class="editorial__link" href="#editorial">See the series</a>
+        </div>
+      </div>
+      <div class="editorial__cell">
+        <img src="images/editorial-pylon.jpg" width="800" height="1000" loading="lazy" decoding="async"
+             alt="White crop top and sage mini skirt, one hand on a carved sandstone wall and the other holding up a long braid">
+      </div>
+      <div class="editorial__cell">
+        <img src="images/editorial-stone-step.jpg" width="800" height="1000" loading="lazy" decoding="async"
+             alt="Ivory fern-embroidered camisole and flared trouser, hand on hip against a sandstone wall with a pyramid behind">
+      </div>
+      <div class="editorial__cell">
+        <img src="images/editorial-wall-lean.jpg" width="800" height="1000" loading="lazy" decoding="async"
+             alt="Ivory fern co-ord and chandelier earrings, leaning on a carved sandstone wall and looking away">
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Banner: cut (see CLAUDE.md, Sections). -->
+
+  <section class="enquire" id="enquire" aria-labelledby="enquire-title">
+    <div class="container">
+      <div class="section-head" data-reveal>
+        <!-- INVENTED: enquiry heading. Note: CLAUDE.md asks for exactly one
+             italic word; this placeholder has three. -->
+        <h2 class="section-title" id="enquire-title">Enquire <em>about a piece</em></h2>
+      </div>
+
+      <div class="enquire__body" data-reveal>
+        <!-- INVENTED: enquiry intro -->
+        <p class="enquire__intro">Tell us which piece and we will come back to you with fabric, sizing and lead time.</p>
+
+        <!-- TODO: set action to wherever enquiries should go. Until then
+             the form says so on submit instead of failing silently. -->
+        <form class="enquiry-form" method="post">
+          <div class="field">
+            <label class="eyebrow" for="enquiry-name">Name</label>
+            <input id="enquiry-name" name="name" type="text" autocomplete="name" required>
+          </div>
+          <div class="field">
+            <label class="eyebrow" for="enquiry-email">Email</label>
+            <input id="enquiry-email" name="email" type="email" autocomplete="email" required>
+          </div>
+          <div class="field field--wide">
+            <label class="eyebrow" for="enquiry-piece">Piece of interest <span class="field__note">(optional)</span></label>
+            <div class="select-wrap">
+              <!-- INVENTED: piece names, matching the collection -->
+              <select id="enquiry-piece" name="piece">
+                <option value="">Choose a piece</option>
+                <option value="sage-mini-skirt">Sage Mini Skirt</option>
+                <option value="blush-halter-set">Blush Halter Set</option>
+                <option value="fern-co-ord">Fern Co-ord</option>
+                <option value="greige-wrap-drape">Greige Wrap Drape</option>
+                <option value="gold-leaf-gown">Gold Leaf Gown</option>
+                <option value="lilac-tunic">Lilac Tunic</option>
+                <option value="stripe-halter-dress">Stripe Halter Dress</option>
+                <option value="one-shoulder-set">One-Shoulder Set</option>
+              </select>
+              <svg width="11" height="7" viewBox="0 0 11 7" aria-hidden="true" focusable="false">
+                <path d="M0.5 0.75l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1"/>
+              </svg>
+            </div>
+          </div>
+          <div class="field field--wide">
+            <label class="eyebrow" for="enquiry-message">Message</label>
+            <textarea id="enquiry-message" name="message" rows="6" required></textarea>
+          </div>
+          <div class="form-foot">
+            <!-- INVENTED: button label -->
+            <button class="button button--submit" type="submit">Send enquiry</button>
+            <p class="form-status" role="status" aria-live="polite"></p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer__main">
+      <div>
+        <a class="footer__brand" href="#top" aria-label="MahtRa, back to top">
+          <span class="logo logo--full" aria-hidden="true"></span>
+        </a>
+        <!-- INVENTED: newsletter line -->
+        <p class="footer__line">First word on new pieces and the next collection.</p>
+        <!-- TODO: set action to the newsletter provider's endpoint. -->
+        <form class="newsletter" method="post">
+          <label class="eyebrow" for="newsletter-email">Email address</label>
+          <div class="newsletter__row">
+            <input id="newsletter-email" name="email" type="email" autocomplete="email" required>
+            <!-- INVENTED: button label -->
+            <button class="button" type="submit">Sign up</button>
+          </div>
+          <p class="form-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+
+      <!-- INVENTED: footer columns and link labels. TODO: link targets,
+           apart from Contact, which goes to the enquiry form. -->
+      <nav class="footer__cols" aria-label="Footer">
+        <div>
+          <h2 class="eyebrow footer__heading">The Label</h2>
+          <ul class="footer__links">
+            <li><a class="footer-link" href="#">About</a></li>
+            <li><a class="footer-link" href="#">Atelier</a></li>
+            <li><a class="footer-link" href="#enquire">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2 class="eyebrow footer__heading">Legal</h2>
+          <ul class="footer__links">
+            <li><a class="footer-link" href="#">Privacy</a></li>
+            <li><a class="footer-link" href="#">Terms</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2 class="eyebrow footer__heading">Follow</h2>
+          <ul class="footer__links">
+            <li><a class="footer-link" href="#">Instagram</a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+
+    <div class="footer__legal">
+      <p>&copy; 2026 MahtRa</p>
+    </div>
+  </div>
+</footer>
+
+<!-- Piece detail panel. One panel, filled by the script from PIECES. -->
+<dialog class="piece-panel" aria-labelledby="panel-title">
+  <div class="piece-panel__bar">
+    <button class="nav-link piece-panel__close" type="button">
+      Close
+      <svg width="11" height="11" viewBox="0 0 11 11" aria-hidden="true" focusable="false">
+        <path d="M0.5 0.5l10 10M10.5 0.5l-10 10" fill="none" stroke="currentColor" stroke-width="1"/>
+      </svg>
+    </button>
+  </div>
+  <div class="piece-panel__body">
+    <div class="piece-panel__gallery"></div>
+    <div class="piece-panel__info">
+      <p class="eyebrow">Season One</p>
+      <h2 class="piece-panel__title" id="panel-title"></h2>
+      <p class="product__meta piece-panel__fabric"></p>
+      <p class="piece-panel__desc"></p>
+      <ul class="piece-panel__details"></ul>
+      <fieldset class="sizes">
+        <legend class="eyebrow">Size</legend>
+        <div class="sizes__options"></div>
+      </fieldset>
+      <a class="button piece-panel__enquire" href="#enquire">Enquire about this piece</a>
+    </div>
+  </div>
+</dialog>
+
+<script>
+(() => {
+  'use strict';
+
+  /* =================================================================
+     2. Header
+     ================================================================= */
+
+  const header = document.querySelector('.site-header');
+  const heroBox = document.querySelector('.hero-sentinel');
+  let onGlyphMode = null;   // set by the sand field to re-ink the glyphs
+
+  // The bar takes over once the page has covered the hero up to the
+  // header's lower edge.
+  const setBar = on => {
+    if (header.classList.contains('is-bar') === on) return;
+    header.classList.toggle('is-bar', on);
+    if (!on && onGlyphMode) onGlyphMode();
+  };
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(entries => {
+      setBar(!entries[entries.length - 1].isIntersecting);
+    }, { rootMargin: -header.offsetHeight + 'px 0px 0px 0px' }).observe(heroBox);
+  } else {
+    const check = () => setBar(window.scrollY >= heroBox.offsetHeight - header.offsetHeight);
+    window.addEventListener('scroll', check, { passive: true });
+    check();
+  }
+
+
+  /* =================================================================
+     3. Section reveal
+     ================================================================= */
+
+  if ('IntersectionObserver' in window &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    // Each child is watched on its own, so a tall one-column list does not
+    // hold its first tile back. Children that arrive together are
+    // staggered 70ms apart; past the sixth they share the sixth delay.
+    const reveal = new IntersectionObserver((entries, observer) => {
+      const arriving = entries
+        .filter(entry => entry.isIntersecting)
+        .map(entry => entry.target)
+        .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1);
+      arriving.forEach((el, i) => {
+        observer.unobserve(el);
+        el.style.transitionDelay = Math.min(i, 5) * 70 + 'ms';
+        el.classList.add('is-revealed');
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('[data-reveal]').forEach(group => {
+      Array.from(group.children).forEach(child => {
+        child.classList.add('will-reveal');
+        reveal.observe(child);
+      });
+    });
+  }
+
+  /* Enquire links jump to the form with their piece already chosen. */
+  document.addEventListener('click', e => {
+    const link = e.target.closest('a[data-piece]');
+    if (!link) return;
+    const select = document.getElementById('enquiry-piece');
+    if (select) select.value = link.dataset.piece;
+  });
+
+  /* =================================================================
+     Piece detail panel
+     ================================================================= */
+
+  // INVENTED: every description, detail line and size below.
+  // img is the file stem; the gallery adds -back, -detail and -location.
+  const PIECES = {
+    'sage-mini-skirt': {
+      name: 'Sage Mini Skirt', fabric: 'Handwoven linen', img: 'sage-skirt',
+      desc: 'A high-waisted mini in sage linen, cut straight and close with a concealed side zip. Shown with the white bandeau crop and a gold armlet.',
+      details: [['Fabric', 'Handwoven linen'], ['Fit', 'High waist, sits above the knee'], ['Care', 'Hand wash cold, dry flat']],
+      alts: ['White bandeau crop and sage linen mini skirt, front on, against a white seamless',
+             'The sage mini from behind, looking back over the shoulder, long braid falling down the back',
+             'Close view of the sage linen skirt at the hip, showing the weave and the side seam',
+             'Sage mini skirt and white crop against carved sandstone at the temple location']
+    },
+    'blush-halter-set': {
+      name: 'Blush Halter Set', fabric: 'Washed linen', img: 'halter-set',
+      desc: 'A blush halter crop with a keyhole neck and a bare back, paired with the sage mini. Ties at the nape.',
+      details: [['Fabric', 'Washed linen'], ['Fit', 'Cropped above the waist'], ['Care', 'Hand wash cold']],
+      alts: ['Blush keyhole halter crop with the sage mini skirt, hand on hip, against a white seamless',
+             'The halter from behind, showing the open back and the tie at the waist',
+             'Close view of the blush linen at the hem of the halter, hand resting at the hip',
+             'Blush halter set leaning between carved sandstone columns in hard sun']
+    },
+    'fern-co-ord': {
+      name: 'Fern Co-ord', fabric: 'Embroidered cotton', img: 'fern-coord',
+      desc: 'A camisole and wide flared trouser in cream cotton, embroidered all over with fronds of fern. The camisole laces across an open back.',
+      details: [['Fabric', 'Embroidered cotton'], ['Fit', 'Relaxed camisole, high-rise flared trouser'], ['Care', 'Dry clean']],
+      alts: ['Cream fern-embroidered camisole and flared trouser, front on, against a white seamless',
+             'The camisole from behind, laced in a criss-cross over the open back',
+             'Close view of the fern embroidery in cream thread on cream cotton',
+             'Fern co-ord with a hand against a carved sandstone wall beside a painted figure']
+    },
+    'greige-wrap-drape': {
+      name: 'Greige Wrap Drape', fabric: 'Washed silk', img: 'greige-drape',
+      desc: 'A pearl triangle bralette with a long greige wrap skirt, knotted at the hip. The marbled print moves like water over stone.',
+      details: [['Fabric', 'Washed silk'], ['Fit', 'Wrap skirt adjusts at the knot'], ['Care', 'Dry clean']],
+      alts: ['Pearl triangle bralette with a knotted greige wrap skirt, against a white seamless',
+             'The bralette and wrap skirt from behind, long dark hair down the back',
+             'Close view of the marbled greige print on washed silk',
+             'Greige wrap drape against a carved sandstone wall with a gold armlet']
+    },
+    'gold-leaf-gown': {
+      name: 'Gold Leaf Gown', fabric: 'Silk organza', img: 'gold-leaf-gown',
+      desc: 'A long ivory slip dress embroidered with gold leaves, falling straight from fine straps that cross at the back.',
+      details: [['Fabric', 'Silk organza'], ['Fit', 'Straight, ankle length'], ['Care', 'Dry clean']],
+      alts: ['Ivory slip dress embroidered with gold leaves, hands clasped, against a white seamless',
+             'The gown from behind, straps crossing over the back, the skirt gathered in one hand',
+             'Close view of the gold leaf embroidery on ivory organza',
+             'Gold leaf gown with hands raised to the head against a carved sandstone wall']
+    },
+    'lilac-tunic': {
+      name: 'Lilac Tunic', fabric: 'Handwoven linen', img: 'lilac-tunic',
+      desc: 'A short tunic in lilac-grey with deep bell sleeves and a broad sand-coloured band at the hem and cuffs.',
+      details: [['Fabric', 'Handwoven linen'], ['Fit', 'Loose, mid-thigh'], ['Care', 'Hand wash cold']],
+      alts: ['Lilac-grey tunic with bell sleeves and a sand-coloured hem band, front on, against a white seamless',
+             'The tunic from behind, showing the bell sleeves and the banded hem',
+             'Close view of the lilac-grey weave meeting the sand-coloured band',
+             'Lilac tunic against carved sandstone columns at the temple location']
+    },
+    'stripe-halter-dress': {
+      name: 'Stripe Halter Dress', fabric: 'Woven cotton', img: 'stripe-halter-dress',
+      desc: 'A halter mini in a brushed stripe of clay, taupe and grey, with a ring at the neck and a cut-out at the waist.',
+      details: [['Fabric', 'Woven cotton'], ['Fit', 'Close at the waist, A-line skirt'], ['Care', 'Hand wash cold']],
+      alts: ['Clay and taupe striped halter mini dress with a ring at the neck, front on, against a white seamless',
+             'The halter dress from behind, hands on hips, braid down the open back',
+             'Close view of the brushed stripe at the neckline',
+             'Stripe halter dress against a wall carved with hieroglyphs']
+    },
+    'one-shoulder-set': {
+      name: 'One-Shoulder Set', fabric: 'Raw linen', img: 'one-shoulder-set',
+      desc: 'A one-shoulder top layered over an asymmetric skirt, both in raw cream linen with softly frayed edges.',
+      details: [['Fabric', 'Raw linen'], ['Fit', 'Loose top, asymmetric hem'], ['Care', 'Hand wash cold']],
+      alts: ['Cream one-shoulder top layered over an asymmetric skirt, front on, against a white seamless',
+             'The one-shoulder top from behind, the single strap crossing the shoulder blade',
+             'Close view of the raw cream linen and the frayed hem',
+             'One-shoulder set on white marble steps in front of a columned building']
+    }
+  };
+  const SIZES = ['XS', 'S', 'M', 'L'];
+
+  const panel = document.querySelector('.piece-panel');
+  if (panel && typeof panel.showModal === 'function') {
+    const gallery = panel.querySelector('.piece-panel__gallery');
+    const sizeBox = panel.querySelector('.sizes__options');
+    const enquire = panel.querySelector('.piece-panel__enquire');
+    let trigger = null;
+
+    const openPiece = (id, from) => {
+      const p = PIECES[id];
+      if (!p) return;
+      trigger = from;
+      panel.querySelector('.piece-panel__title').textContent = p.name;
+      panel.querySelector('.piece-panel__fabric').textContent = p.fabric;
+      panel.querySelector('.piece-panel__desc').textContent = p.desc;
+      panel.querySelector('.piece-panel__details').innerHTML = p.details
+        .map(([k, v]) => '<li><span class="eyebrow">' + k + '</span> ' + v + '</li>').join('');
+      gallery.innerHTML = ['', '-back', '-detail', '-location']
+        .map((suffix, i) => '<img src="images/piece-' + p.img + suffix + '.jpg" width="900" height="1200" alt="' + p.alts[i] + '">')
+        .join('');
+      sizeBox.innerHTML = SIZES
+        .map(s => '<label><input type="radio" name="panel-size" value="' + s + '"><span>' + s + '</span></label>').join('');
+      enquire.dataset.piece = id;
+      document.documentElement.classList.add('has-panel');
+      panel.showModal();
+      panel.scrollTop = 0;
+    };
+
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('[data-open]');
+      if (btn) openPiece(btn.dataset.open, btn);
+    });
+
+    // Tidy up here rather than on the dialog's close event: that event is
+    // queued, and the page must be unlocked before an Enquire jump lands.
+    const closePanel = (giveFocusBack) => {
+      document.documentElement.classList.remove('has-panel');
+      if (panel.open) panel.close();
+      if (giveFocusBack && trigger) trigger.focus();
+    };
+
+    panel.querySelector('.piece-panel__close').addEventListener('click', () => closePanel(true));
+    // A click on the backdrop lands on the dialog element itself.
+    panel.addEventListener('click', e => { if (e.target === panel) closePanel(true); });
+    panel.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { e.preventDefault(); closePanel(true); }
+    });
+    // Safety net for any other way the dialog closes.
+    panel.addEventListener('close', () => document.documentElement.classList.remove('has-panel'));
+
+    // Enquire: carry the size into the message, close, and let the link jump.
+    enquire.addEventListener('click', () => {
+      const size = panel.querySelector('input[name="panel-size"]:checked');
+      const message = document.getElementById('enquiry-message');
+      if (size && message && !message.value.trim()) {
+        message.value = 'Size ' + size.value + '. ';
+      }
+      closePanel(false);
+    });
+  }
+
+  /* =================================================================
+     7 & 8. Enquiry and newsletter forms
+     ================================================================= */
+
+  // INVENTED: confirmation and error copy
+  const formCopy = {
+    'enquiry-form': ['Thank you. We will come back to you shortly.', 'Your enquiry did not send. Please try again.'],
+    'newsletter': ['Thank you. You are on the list.', 'That did not go through. Please try again.']
+  };
+
+  document.querySelectorAll('.enquiry-form, .newsletter').forEach(form => {
+    const status = form.querySelector('.form-status');
+    const submit = form.querySelector('[type="submit"]');
+    const [done, failed] = formCopy[form.classList[0]];
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const endpoint = form.getAttribute('action');
+      if (!endpoint) {
+        status.className = 'form-status is-unwired';
+        status.textContent = 'Form not connected yet: set its action attribute';
+        return;
+      }
+      status.className = 'form-status';
+      status.textContent = 'Sending';
+      submit.disabled = true;
+      fetch(endpoint, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } })
+        .then(res => {
+          if (!res.ok) throw new Error(res.status);
+          form.reset();
+          status.textContent = done;
+        })
+        .catch(() => { status.textContent = failed; })
+        .finally(() => { submit.disabled = false; });
+    });
+  });
+
+  /* =================================================================
+     1. Sand field
+     ================================================================= */
+
+  const hero = document.querySelector('.hero');
+  const sentinel = document.querySelector('.hero-sentinel');
+  const groundCanvas = hero.querySelector('.sand-ground');
+  const looseCanvas = hero.querySelector('.sand-loose');
+  const setEl = hero.querySelector('.set');
+  const screenEl = hero.querySelector('.screen');
+  const video = hero.querySelector('.film');
+
+  if (!groundCanvas.getContext || !window.Uint32Array) return;
+  const gctx = groundCanvas.getContext('2d');
+  const lctx = looseCanvas.getContext('2d');
+  if (!gctx || !lctx) return;
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // --- Parameters (CLAUDE.md, Motion 1) ------------------------------
+  const GRAINS = 600000;
+  const BED_DENSITY = 0.46;
+  const LAG = 0.22;
+  const RADIUS = 18;
+  const SHOVE = 0.50 * 2.6;
+  const CARRY = 0.50 * 2.2;
+  const FRICTION = 0.80;
+  const REST = 0.0012;
+  const GRAIN_SIZE = 1.3;
+  const MAX_SCALE = 1.55;
+  const MAX_PIXELS = 1900000;
+  const DRIFT = 0.60;
+
+  const SUN = (() => {
+    const x = -0.60, y = -0.60, z = 0.53, l = Math.hypot(x, y, z);
+    return [x / l, y / l, z / l];
+  })();
+  const AMBIENT = 0.58;
+  const DIFFUSE = 1.14;
+  const EXPOSURE = 1.05;
+  const BEAMS = 0.70;
+  const SHADOW_DIR = 0.70710678;
+  const SHADOW_STEPS = 12;
+  const SHADOW_REACH = 0.30;
+  const PENUMBRA_NEAR = 16;
+  const PENUMBRA_FAR = 68;
+  const CONTACT = 15;
+  const CONTACT_DARK = 0.44;
+
+  const LEVELS = 32;
+  const TONES = 34;
+  const Z_SPAN = 2.75;
+  // Lit light value that maps to u = 1. Flat sunlit sand lands near u = 0.88.
+  const LIGHT_NORM = 1.42;
+
+  // Sand colour for a grain z standard deviations from the mean at light
+  // level u (0-1). Brightened from the measured values on the client's
+  // request: higher floor and gain, and blue falling away more gently, so
+  // sunlit sand reads light and golden rather than ochre. Spread stays
+  // near-constant so shade keeps its texture.
+  const sandRGB = (z, u) => {
+    const luma = 40 + 175 * u + z * (12 + 24 * u);
+    return [luma * (1.12 + 0.04 * u), luma * 0.96, luma * (0.84 - 0.16 * u)];
+  };
+
+  // Shell placements, as fractions of the hero. Mirrored by the .ph-tag rules.
+  const SHELLS = [
+    // Kept outside the set: clear of its sides above 860px, below it on phones.
+    { src: 'images/shell-01.png', x: 0.92, y: 0.74, size: 0.050, rot: 0.6 },
+    { src: 'images/shell-02.png', x: 0.95, y: 0.90, size: 0.036, rot: -0.9 },
+    { src: 'images/shell-03.png', x: 0.07, y: 0.82, size: 0.044, rot: 2.2 }
+  ];
+
+  // --- Colour lookup: 34 grain tones x 32 light levels ---------------
+  const lut = new Uint32Array(TONES * LEVELS);
+  (() => {
+    const pack = (r, g, b) =>
+      ((255 << 24) | (Math.round(b) << 16) | (Math.round(g) << 8) | Math.round(r)) >>> 0;
+    const rgbAt = sandRGB;
+    for (let k = 0; k < TONES; k++) {
+      const z = -Z_SPAN + (2 * Z_SPAN * k) / (TONES - 1);
+      for (let l = 0; l < LEVELS; l++) {
+        const u = l / (LEVELS - 1);
+        let c = rgbAt(Math.min(z, 1.8), u);
+        // Keep hue when a channel would clip; clipping red alone is what
+        // turns bright sand yellow-green.
+        const peak = Math.max(c[0], c[1], c[2]);
+        if (peak > 255) c = c.map(v => v * 255 / peak);
+        if (z > 1.8) {
+          const t = 1 - Math.exp(-(z - 1.8) * 1.2);
+          c = [c[0] + (255 - c[0]) * t, c[1] + (246 - c[1]) * t, c[2] + (226 - c[2]) * t];
+        }
+        lut[k * LEVELS + l] = pack(
+          Math.max(0, Math.min(255, c[0])),
+          Math.max(0, Math.min(255, c[1])),
+          Math.max(0, Math.min(255, c[2]))
+        );
+      }
+    }
+  })();
+
+  // --- Small maths ----------------------------------------------------
+  let seed = 0x2f6b9e31;
+  const rand = () => {
+    seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
+    return (seed >>> 0) / 4294967296;
+  };
+  const gauss = () => {
+    const u = rand() || 1e-9;
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(6.2831853 * rand());
+  };
+  const toneOf = z => {
+    let k = Math.round(((z + Z_SPAN) / (2 * Z_SPAN)) * (TONES - 1));
+    if (k < 0) k = 0; else if (k > TONES - 1) k = TONES - 1;
+    return k * LEVELS;
+  };
+  // 26% one-pixel, 52% two-pixel, 22% three-pixel
+  const mixSize = () => { const r = rand(); return r < 0.26 ? 1 : r < 0.78 ? 2 : 3; };
+  const smooth = (a, b, x) => {
+    const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+    return t * t * (3 - 2 * t);
+  };
+
+  const hash = (ix, iy) => {
+    let h = (Math.imul(ix, 374761393) + Math.imul(iy, 668265263)) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+  };
+  const vnoise = (x, y) => {
+    const ix = Math.floor(x), iy = Math.floor(y);
+    const fx = x - ix, fy = y - iy;
+    const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+    const a = hash(ix, iy), b = hash(ix + 1, iy), c = hash(ix, iy + 1), d = hash(ix + 1, iy + 1);
+    return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
+  };
+  const fbm = (x, y, octaves) => {
+    let sum = 0, amp = 0.5, freq = 1, norm = 0;
+    for (let o = 0; o < octaves; o++) {
+      sum += amp * vnoise(x * freq, y * freq);
+      norm += amp; amp *= 0.5; freq *= 2.03;
+    }
+    return sum / norm;
+  };
+
+  // --- State ------------------------------------------------------------
+  let cssW = 0, cssH = 0, scale = 1, W = 0, H = 0, LW = 0;
+  let quality = 1;
+  let light = null;            // Uint8Array, half width x half height, 0..31
+  let looseImg = null, looseBuf = null;
+  let seeded = false;
+  let active = 0;
+
+  // Set and screen boxes in CSS px, relative to the hero
+  const set = { x: 0, y: 0, w: 0, h: 0, cx: 0, cy: 0, r: 0 };
+  const screen = { x: 0, y: 0, w: 0, h: 0 };
+
+  const X = new Float32Array(GRAINS);
+  const Y = new Float32Array(GRAINS);
+  const VX = new Float32Array(GRAINS);
+  const VY = new Float32Array(GRAINS);
+  const T = new Uint16Array(GRAINS);   // tone row offset into lut
+  const M = new Uint8Array(GRAINS);    // size class 1..3
+  const S = new Uint8Array(GRAINS);    // footprint in render px at current scale
+
+  const assets = { tv: null, shells: [] };
+
+  // Signed distance to the set's rounded footprint, CSS px
+  const sdfSet = (px, py) => {
+    const qx = Math.abs(px - set.cx) - set.w / 2 + set.r;
+    const qy = Math.abs(py - set.cy) - set.h / 2 + set.r;
+    const ox = qx > 0 ? qx : 0, oy = qy > 0 ? qy : 0;
+    return Math.sqrt(ox * ox + oy * oy) + Math.min(Math.max(qx, qy), 0) - set.r;
+  };
+
+  // --- Layout -------------------------------------------------------------
+  function measure() {
+    const hr = hero.getBoundingClientRect();
+    const sr = setEl.getBoundingClientRect();
+    const cr = screenEl.getBoundingClientRect();
+    cssW = hr.width; cssH = hr.height;
+    set.x = sr.left - hr.left; set.y = sr.top - hr.top; set.w = sr.width; set.h = sr.height;
+    set.cx = set.x + set.w / 2; set.cy = set.y + set.h / 2; set.r = set.w * 0.08;
+    screen.x = cr.left - hr.left; screen.y = cr.top - hr.top; screen.w = cr.width; screen.h = cr.height;
+  }
+
+  function layout(keepGrains) {
+    const oldW = W, oldH = H;
+    measure();
+    let s = Math.min(window.devicePixelRatio || 1, MAX_SCALE) * quality;
+    if (cssW * cssH * s * s > MAX_PIXELS) s = Math.sqrt(MAX_PIXELS / (cssW * cssH));
+    scale = s;
+    W = Math.max(16, Math.round(cssW * s));
+    H = Math.max(16, Math.round(cssH * s));
+    LW = (W + 1) >> 1;
+
+    groundCanvas.width = looseCanvas.width = W;
+    groundCanvas.height = looseCanvas.height = H;
+    looseImg = lctx.createImageData(W, H);
+    looseBuf = new Uint32Array(looseImg.data.buffer);
+
+    buildLight();
+    buildGround();
+    inkGlyphs();
+
+    const sizeTab = [0, 1, 1, 1].map((_, m) => Math.max(1, Math.min(3, Math.round(m * GRAIN_SIZE * s / 2.015))));
+    if (keepGrains && seeded) {
+      const fx = (W - 3) / (oldW - 3), fy = (H - 3) / (oldH - 3);
+      for (let i = 0; i < GRAINS; i++) {
+        X[i] *= fx; Y[i] *= fy; VX[i] = 0; VY[i] = 0; S[i] = sizeTab[M[i]];
+      }
+    } else {
+      seedGrains();
+      for (let i = 0; i < GRAINS; i++) S[i] = sizeTab[M[i]];
+    }
+    active = 0;
+  }
+
+  // Light field: one pass per layout, quarter resolution, 32 levels.
+  function buildLight() {
+    const LH = (H + 1) >> 1;
+    light = new Uint8Array(LW * LH);
+    const step = 2 / scale;                       // CSS px per light cell
+    const hW = LW + 2, hH = LH + 2;
+    const height = new Float32Array(hW * hH);
+    const maxDim = Math.max(cssW, cssH);
+
+    // Height field in CSS px: dunes, wind ripples, sand banked on the set.
+    for (let j = 0; j < hH; j++) {
+      const py = (j - 1 + 0.5) * step;
+      for (let i = 0; i < hW; i++) {
+        const px = (i - 1 + 0.5) * step;
+        const dune = fbm(px / 380 + 11.3, py / 380 + 4.1, 3);
+        const warp = fbm(px / 140 + 3.7, py / 140 + 9.2, 2);
+        const phase = (px * 0.30 + py * 0.95) / 17 + warp * 3.2;
+        const ripple = Math.sin(6.2831853 * phase) + 0.3 * Math.sin(12.566371 * phase + 0.5);
+        const patch = smooth(0.35, 0.72, fbm(px / 260 + 7.1, py / 260 + 1.9, 2));
+        let d = sdfSet(px, py);
+        if (d < 0) d = 0;
+        height[j * hW + i] = 22 * dune + 0.75 * ripple * (0.25 + 0.75 * patch) + 9 * Math.exp(-d / 26);
+      }
+    }
+
+    const reach = SHADOW_REACH * maxDim;
+    const sx0 = set.x - PENUMBRA_FAR, sy0 = set.y - PENUMBRA_FAR;
+    const sx1 = set.x + set.w + reach + PENUMBRA_FAR, sy1 = set.y + set.h + reach + PENUMBRA_FAR;
+    const [Lx, Ly, Lz] = SUN;
+    const beamA = 6.2831853 / (0.85 * maxDim), beamB = 6.2831853 / (0.31 * maxDim);
+
+    for (let j = 0; j < LH; j++) {
+      const py = (j + 0.5) * step;
+      for (let i = 0; i < LW; i++) {
+        const px = (i + 0.5) * step;
+        const hi = (j + 1) * hW + (i + 1);
+        const hx = (height[hi + 1] - height[hi - 1]) / (2 * step);
+        const hy = (height[hi + hW] - height[hi - hW]) / (2 * step);
+        let lam = (-hx * Lx - hy * Ly + Lz) / Math.sqrt(hx * hx + hy * hy + 1);
+        if (lam < 0) lam = 0;
+
+        // Two soft diagonal sun beams at different scales
+        const q = (px - py) * 0.70710678;
+        const beam = 0.62 * (0.5 + 0.5 * Math.cos(q * beamA + 0.7)) +
+                     0.38 * (0.5 + 0.5 * Math.cos(q * beamB + 2.1));
+        const beamF = 1 + BEAMS * 0.42 * (beam - 0.5);
+
+        const d = sdfSet(px, py);
+        let occ = 0, ao = 1;
+        if (d >= 0) {
+          if (px > sx0 && px < sx1 && py > sy0 && py < sy1) {
+            for (let k = 1; k <= SHADOW_STEPS; k++) {
+              const f = k / SHADOW_STEPS, t = reach * f;
+              const sd = sdfSet(px - SHADOW_DIR * t, py - SHADOW_DIR * t);
+              const o = 0.5 - sd / (PENUMBRA_NEAR + (PENUMBRA_FAR - PENUMBRA_NEAR) * f);
+              if (o > occ) { occ = o; if (occ >= 1) { occ = 1; break; } }
+            }
+            occ = occ * occ * (3 - 2 * occ);
+          }
+          if (d < CONTACT) ao = CONTACT_DARK + (1 - CONTACT_DARK) * smooth(0, CONTACT, d);
+        }
+
+        const lit = (AMBIENT + DIFFUSE * lam * beamF * (1 - occ)) * ao * EXPOSURE;
+        let u = lit / LIGHT_NORM;
+        if (u > 1) u = 1;
+        light[j * LW + i] = Math.round(u * (LEVELS - 1));
+      }
+    }
+  }
+
+  // Give each header glyph the ink that reads on the sand under it: tomb
+  // where it holds 4.5:1, otherwise whichever of tomb and limestone is
+  // stronger. The sun is fixed, so this only changes with layout.
+  const linear = c => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+  const luminance = (r, g, b) => 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+  const TOMB_L = luminance(0x24, 0x19, 0x13);
+  const LIMESTONE_L = luminance(0xF4, 0xEE, 0xE4);
+
+  function inkGlyphs() {
+    if (header.classList.contains('is-bar')) return;
+    const hr = hero.getBoundingClientRect();
+    const LH = light.length / LW;
+    document.querySelectorAll('.glyph').forEach(el => {
+      const r = el.getBoundingClientRect();
+      if (!r.width) return;
+      const i0 = Math.max(0, Math.floor((r.left - hr.left) * scale / 2));
+      const i1 = Math.min(LW - 1, Math.ceil((r.right - hr.left) * scale / 2));
+      const j0 = Math.max(0, Math.floor((r.top - hr.top) * scale / 2));
+      const j1 = Math.min(LH - 1, Math.ceil((r.bottom - hr.top) * scale / 2));
+      let sum = 0, n = 0;
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { sum += light[j * LW + i]; n++; }
+      if (!n) return;
+      const u = sum / n / (LEVELS - 1);
+      const sand = luminance(...sandRGB(0, u).map(c => Math.min(255, c)));
+      const onTomb = (sand + 0.05) / (TOMB_L + 0.05);
+      const onLimestone = (LIMESTONE_L + 0.05) / (sand + 0.05);
+      el.style.setProperty('--glyph-ink',
+        onTomb >= 4.5 || onTomb >= onLimestone ? 'var(--tomb)' : 'var(--limestone)');
+    });
+  }
+  onGlyphMode = () => { if (light) inkGlyphs(); };
+
+  // Ground: base sand, then the packed bed baked in once, then the set.
+  function buildGround() {
+    const img = gctx.createImageData(W, H);
+    const buf = new Uint32Array(img.data.buffer);
+
+    // The ground is generated, not photographed (the client kept this over
+    // images/sand-field.jpg). Gaps between packed grains read as darker sand.
+    for (let y = 0; y < H; y++) {
+      const lrow = (y >> 1) * LW, row = y * W;
+      for (let x = 0; x < W; x++) {
+        const lv = light[lrow + (x >> 1)];
+        const tone = (4 + ((rand() * 10) | 0)) * LEVELS;
+        buf[row + x] = lut[tone + (lv > 4 ? lv - 4 : 0)];
+      }
+    }
+
+    // Packed bed. Never moves; it is what the loose layer reveals.
+    const bed = Math.round(BED_DENSITY * W * H);
+    const inv = 1 / scale;
+    const sizeTab = [0, 1, 2, 3].map(m => Math.max(1, Math.min(3, Math.round(m * GRAIN_SIZE * scale / 2.015))));
+    for (let n = 0; n < bed; n++) {
+      const x = (rand() * (W - 3)) | 0, y = (rand() * (H - 3)) | 0;
+      if (sdfSet(x * inv, y * inv) < 0) continue;
+      const lv = light[(y >> 1) * LW + (x >> 1)];
+      const c = lut[toneOf(gauss()) + (lv > 2 ? lv - 2 : 0)];
+      const s = sizeTab[mixSize()];
+      let p = y * W + x;
+      buf[p] = c;
+      if (s > 1) {
+        buf[p + 1] = c; p += W; buf[p] = c; buf[p + 1] = c;
+        if (s > 2) { buf[p + 2] = c; buf[p - W + 2] = c; p += W; buf[p] = c; buf[p + 1] = c; buf[p + 2] = c; }
+      }
+    }
+
+    gctx.putImageData(img, 0, 0);
+    gctx.save();
+    gctx.scale(scale, scale);
+    drawShells(gctx);
+    drawSet(gctx);
+    gctx.restore();
+  }
+
+  const roundRect = (ctx, x, y, w, h, r) => {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  };
+
+  // The buried set, top-down: almost all screen, held in a thin sandstone
+  // bezel. Drawn fresh in CSS px; replaced by images/tv-topdown.png when
+  // that file exists.
+  function drawSet(ctx) {
+    const { x, y, w, h, r } = set;
+    const sc = screen;
+    const gr = w * 0.058;               // CRT glass corner
+    const local = (seed0 => () => {     // fixed wear pattern per layout
+      seed0 ^= seed0 << 13; seed0 ^= seed0 >>> 17; seed0 ^= seed0 << 5;
+      return (seed0 >>> 0) / 4294967296;
+    })(0x51ed270b);
+
+    if (assets.tv) {
+      ctx.drawImage(assets.tv, x, y, w, h);
+    } else {
+      // Bezel: sandstone, lit from the upper left
+      let g = ctx.createLinearGradient(x, y, x + w, y + h);
+      g.addColorStop(0, '#d3a078');
+      g.addColorStop(0.5, '#b9835c');
+      g.addColorStop(1, '#94633f');
+      ctx.fillStyle = g;
+      roundRect(ctx, x, y, w, h, r);
+      ctx.fill();
+
+      // Fine wear so the bezel reads as a weathered object, not a flat shape
+      ctx.save();
+      roundRect(ctx, x, y, w, h, r);
+      ctx.clip();
+      for (let i = 0; i < w * 2.2; i++) {
+        ctx.fillStyle = local() < 0.55 ? 'rgba(255,238,214,0.10)' : 'rgba(70,40,20,0.10)';
+        ctx.fillRect(x + local() * w, y + local() * h, 0.6 + local() * 1.4, 0.6 + local() * 0.8);
+      }
+      ctx.restore();
+
+      // Rounded outer edge: highlight upper-left, shade lower-right
+      const bw = w * 0.010;
+      g = ctx.createLinearGradient(x, y, x + w, y + h);
+      g.addColorStop(0, 'rgba(255,240,218,0.55)');
+      g.addColorStop(0.42, 'rgba(255,240,218,0)');
+      g.addColorStop(0.58, 'rgba(60,32,14,0)');
+      g.addColorStop(1, 'rgba(60,32,14,0.50)');
+      ctx.strokeStyle = g;
+      ctx.lineWidth = bw;
+      roundRect(ctx, x + bw / 2, y + bw / 2, w - bw, h - bw, r - bw / 2);
+      ctx.stroke();
+
+      // Groove where the glass meets the bezel
+      const lip = w * 0.007;
+      ctx.strokeStyle = 'rgba(64,36,18,0.55)';
+      ctx.lineWidth = lip;
+      roundRect(ctx, sc.x - lip / 2, sc.y - lip / 2, sc.w + lip, sc.h + lip, gr + lip / 2);
+      ctx.stroke();
+    }
+
+    // Cut the screen out so the film shows through, then lay glass over it.
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    roundRect(ctx, sc.x, sc.y, sc.w, sc.h, gr);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    roundRect(ctx, sc.x, sc.y, sc.w, sc.h, gr);
+    ctx.clip();
+    // CRT bulge: corners fall away from the light
+    let g = ctx.createRadialGradient(
+      sc.x + sc.w / 2, sc.y + sc.h / 2, Math.min(sc.w, sc.h) * 0.34,
+      sc.x + sc.w / 2, sc.y + sc.h / 2, Math.hypot(sc.w, sc.h) * 0.56
+    );
+    g.addColorStop(0, 'rgba(10,6,4,0)');
+    g.addColorStop(1, 'rgba(10,6,4,0.50)');
+    ctx.fillStyle = g;
+    ctx.fillRect(sc.x, sc.y, sc.w, sc.h);
+    // Reflection of the sky on curved glass, upper left
+    g = ctx.createLinearGradient(sc.x, sc.y, sc.x + sc.w * 0.6, sc.y + sc.h * 0.8);
+    g.addColorStop(0, 'rgba(255,248,236,0.14)');
+    g.addColorStop(0.42, 'rgba(255,248,236,0.04)');
+    g.addColorStop(0.43, 'rgba(255,248,236,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(sc.x, sc.y, sc.w, sc.h);
+    // Recess: the glass sits below the bezel, so its upper-left inner edge is in shade
+    g = ctx.createLinearGradient(sc.x, sc.y, sc.x + sc.w, sc.y + sc.h);
+    g.addColorStop(0, 'rgba(0,0,0,0.45)');
+    g.addColorStop(0.5, 'rgba(0,0,0,0.12)');
+    g.addColorStop(1, 'rgba(255,240,220,0.10)');
+    ctx.strokeStyle = g;
+    ctx.lineWidth = w * 0.010;
+    roundRect(ctx, sc.x, sc.y, sc.w, sc.h, gr);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawShells(ctx) {
+    const maxDim = Math.max(cssW, cssH);
+    for (const sh of SHELLS) {
+      const img = assets.shells[SHELLS.indexOf(sh)];
+      if (!img) continue;
+      const size = sh.size * maxDim;
+      const cx = sh.x * cssW, cy = sh.y * cssH;
+      const g = ctx.createRadialGradient(cx + size * 0.12, cy + size * 0.12, size * 0.2, cx + size * 0.12, cy + size * 0.12, size * 0.62);
+      g.addColorStop(0, 'rgba(40,24,10,0.35)');
+      g.addColorStop(1, 'rgba(40,24,10,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(cx - size, cy - size, size * 2, size * 2);
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(sh.rot);
+      ctx.drawImage(img, -size / 2, -size / 2, size, size);
+      ctx.restore();
+    }
+  }
+
+  // Loose grains: none on the set at load, apart from the drift banked
+  // along its lower edges.
+  function seedGrains() {
+    const inv = 1 / scale;
+    // The bezel is thin, so the drift is kept low: a bank along the foot
+    // that only just reaches the glass, not a veil over the film.
+    const band = 0.035 * set.h;
+    let i = 0;
+    while (i < GRAINS) {
+      const x = rand() * (W - 3), y = rand() * (H - 3);
+      const d = sdfSet(x * inv, y * inv);
+      if (d < 0) {
+        const lower = smooth(0.78, 0.98, (y * inv - set.y) / set.h);
+        if (rand() >= DRIFT * Math.exp(d / band) * lower) continue;
+      }
+      X[i] = x; Y[i] = y; VX[i] = 0; VY[i] = 0;
+      T[i] = toneOf(gauss());
+      M[i] = mixSize();
+      i++;
+    }
+    seeded = true;
+  }
+
+  // --- Simulation + draw, one pass over every grain ---------------------
+  const pointer = { inside: false, tx: 0, ty: 0, x: 0, y: 0, px: 0, py: 0 };
+
+  function step(force, draw) {
+    const ax = pointer.px, ay = pointer.py, bx = pointer.x, by = pointer.y;
+    const mx = bx - ax, my = by - ay;
+    const seg2 = mx * mx + my * my;
+    const R = RADIUS * scale, R2 = R * R;
+    const x0 = Math.min(ax, bx) - R, x1 = Math.max(ax, bx) + R;
+    const y0 = Math.min(ay, by) - R, y1 = Math.max(ay, by) + R;
+    const shove = SHOVE * scale;
+    const rest = REST * scale * scale;
+    const maxX = W - 3, maxY = H - 3;
+    const buf = looseBuf, lt = light, lw = LW, w = W;
+
+    if (draw) buf.fill(0);
+    let moving = 0;
+
+    for (let i = 0; i < GRAINS; i++) {
+      let x = X[i], y = Y[i], vx = VX[i], vy = VY[i];
+
+      if (force && x > x0 && x < x1 && y > y0 && y < y1) {
+        let t = seg2 > 0 ? ((x - ax) * mx + (y - ay) * my) / seg2 : 0;
+        if (t < 0) t = 0; else if (t > 1) t = 1;
+        const dx = x - (ax + mx * t), dy = y - (ay + my * t);
+        const d2 = dx * dx + dy * dy;
+        if (d2 < R2) {
+          const d = Math.sqrt(d2) || 1e-3;
+          const f = 1 - d / R;
+          vx += (dx / d) * f * shove + mx * f * CARRY;
+          vy += (dy / d) * f * shove + my * f * CARRY;
+        }
+      }
+
+      if (vx !== 0 || vy !== 0) {
+        x += vx; y += vy;
+        if (x < 0) { x = 0; vx = -vx * 0.3; } else if (x > maxX) { x = maxX; vx = -vx * 0.3; }
+        if (y < 0) { y = 0; vy = -vy * 0.3; } else if (y > maxY) { y = maxY; vy = -vy * 0.3; }
+        vx *= FRICTION; vy *= FRICTION;
+        if (vx * vx + vy * vy < rest) { vx = 0; vy = 0; } else moving++;
+        X[i] = x; Y[i] = y; VX[i] = vx; VY[i] = vy;
+      }
+
+      if (!draw) continue;
+      const xi = x | 0, yi = y | 0;
+      const c = lut[T[i] + lt[(yi >> 1) * lw + (xi >> 1)]];
+      let p = yi * w + xi;
+      buf[p] = c;
+      const s = S[i];
+      if (s > 1) {
+        buf[p + 1] = c; p += w; buf[p] = c; buf[p + 1] = c;
+        if (s > 2) { buf[p + 2] = c; buf[p - w + 2] = c; p += w; buf[p] = c; buf[p + 1] = c; buf[p + 2] = c; }
+      }
+    }
+
+    active = moving;
+    if (draw) lctx.putImageData(looseImg, 0, 0);
+  }
+
+  // --- Loop ----------------------------------------------------------------
+  let running = false, rafId = 0, lastStep = 0, heroVisible = true;
+  let cost = 0, heavy = 0;
+
+  function frame(now) {
+    if (!heroVisible) { running = false; return; }
+    // Step at most 60 times a second so 120Hz screens do not run fast.
+    if (now - lastStep < 13) { rafId = requestAnimationFrame(frame); return; }
+    lastStep = now;
+
+    let moved = false;
+    if (pointer.inside) {
+      pointer.px = pointer.x; pointer.py = pointer.y;
+      pointer.x += (pointer.tx - pointer.x) * LAG;
+      pointer.y += (pointer.ty - pointer.y) * LAG;
+      moved = Math.abs(pointer.x - pointer.px) + Math.abs(pointer.y - pointer.py) > 0.02;
+    }
+
+    if (moved || active > 0) {
+      const t0 = performance.now();
+      step(moved, true);
+      // Below ~50fps, lower the render scale; never the grain count.
+      cost = cost * 0.9 + (performance.now() - t0) * 0.1;
+      heavy = cost > 15 ? heavy + 1 : 0;
+      if (heavy > 45 && quality > 0.6) {
+        quality *= 0.85; heavy = 0; cost = 0;
+        layout(true);
+        step(false, true);
+      }
+    }
+
+    if (moved || active > 0) rafId = requestAnimationFrame(frame);
+    else running = false;
+  }
+
+  function wake() {
+    if (running || !heroVisible || reduced) return;
+    running = true;
+    rafId = requestAnimationFrame(frame);
+  }
+
+  function toCanvas(e) {
+    const r = looseCanvas.getBoundingClientRect();
+    pointer.tx = (e.clientX - r.left) * (W / r.width);
+    pointer.ty = (e.clientY - r.top) * (H / r.height);
+  }
+  function snap() {
+    pointer.x = pointer.px = pointer.tx;
+    pointer.y = pointer.py = pointer.ty;
+  }
+
+  // --- Reduced motion: one settled frame, then nothing ------------------------
+  function settledFrame() {
+    const ax = W * 0.07, ay = H * 0.58, bx = W * 0.30, by = H * 0.95;
+    pointer.x = ax; pointer.y = ay;
+    for (let k = 1; k <= 80; k++) {
+      pointer.px = pointer.x; pointer.py = pointer.y;
+      pointer.x = ax + (bx - ax) * k / 80;
+      pointer.y = ay + (by - ay) * k / 80;
+      step(true, false);
+    }
+    for (let k = 0; k < 120 && active > 0; k++) step(false, false);
+    step(false, true);
+  }
+
+  // --- Film ----------------------------------------------------------------
+  video.muted = true;
+  function playFilm() {
+    if (reduced || !heroVisible) return;
+    const p = video.play();
+    if (p && p.catch) p.catch(() => {});
+  }
+
+  // --- Assets that may not exist yet --------------------------------------
+  // Missing files are labelled with their filename, but only when the URL
+  // carries ?labels, so review links stay clean. Agreed with the client.
+  const showLabels = new URLSearchParams(window.location.search).has('labels');
+  function tryImage(src) {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.decoding = 'async';
+      img.onload = () => resolve(img);
+      img.onerror = () => {
+        const tag = hero.querySelector('[data-asset="' + src + '"]');
+        if (tag && showLabels) tag.hidden = false;
+        resolve(null);
+      };
+      img.src = src;
+    });
+  }
+
+  // --- Boot ------------------------------------------------------------------
+  hero.classList.add('is-live');
+  layout(false);
+  if (reduced) settledFrame(); else step(false, true);
+
+  Promise.all([
+    tryImage('images/tv-topdown.png'),
+    ...SHELLS.map(sh => tryImage(sh.src))
+  ]).then(([tv, ...shells]) => {
+    if (!tv && !shells.some(Boolean)) return;
+    assets.tv = tv; assets.shells = shells;
+    buildGround();
+  });
+
+  if (!reduced) {
+    looseCanvas.addEventListener('pointerdown', e => {
+      toCanvas(e); snap(); pointer.inside = true; wake();
+    });
+    looseCanvas.addEventListener('pointermove', e => {
+      toCanvas(e);
+      if (!pointer.inside) { snap(); pointer.inside = true; }
+      wake();
+    });
+    const leave = () => { pointer.inside = false; };
+    looseCanvas.addEventListener('pointerleave', leave);
+    looseCanvas.addEventListener('pointercancel', leave);
+  }
+
+  // 2. Hero handoff: pause the loop when under 10% of the hero is visible.
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(entries => {
+      const e = entries[entries.length - 1];
+      const vis = e.isIntersecting && e.intersectionRatio >= 0.1;
+      if (vis === heroVisible) return;
+      heroVisible = vis;
+      if (vis) { wake(); playFilm(); }
+      else { cancelAnimationFrame(rafId); running = false; video.pause(); }
+    }, { threshold: [0, 0.1] }).observe(sentinel);
+  }
+  playFilm();
+
+  let resizeTimer = 0;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const r = hero.getBoundingClientRect();
+      if (Math.abs(r.width - cssW) < 1 && Math.abs(r.height - cssH) < 1) return;
+      layout(false);
+      if (reduced) settledFrame(); else step(false, true);
+    }, 200);
+  });
+})();
+</script>
+</body>
+</html>
